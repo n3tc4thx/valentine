@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Jupíííí 💖</title>
+
+<style>
+body{
+  margin:0;
+  height:100vh;
+  background:#ffe6ef;
+  font-family:Arial,sans-serif;
+  overflow:hidden;
+  position:relative;
+  text-align:center;
+}
+
+h1{
+  margin-top:30px;
+  color:#ff2f6d;
+  position:relative;
+  z-index:10;
+  transition:opacity 0.5s ease;
+}
+
+#funText{
+  margin-top:10px;
+  color:#ff2f6d;
+  font-size:28px;
+  font-weight:bold;
+  opacity:0;
+  transition:opacity 1s ease;
+  z-index:20;
+  position:relative;
+}
+
+#gif{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  z-index:5;
+}
+
+#gif img{
+  width:380px;
+}
+
+.heart{
+  position:absolute;
+  bottom:-20px;
+  font-size:18px;
+  color:#ff2f6d;
+  animation:floatUp linear forwards;
+}
+
+@keyframes floatUp{
+  to{
+    transform:translateY(-120vh);
+    opacity:0;
+  }
+}
+
+.flyPhotos img{
+  width:130px;
+  border-radius:15px;
+  position:absolute;
+  z-index:6;
+  pointer-events:none;
+  display:none;
+}
+
+/* ✅ NOVÝ pevný horní text */
+#flyingText{
+  position:fixed;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:32px;
+  font-weight:bold;
+  color:#ff2f6d;
+  z-index:200;
+  pointer-events:none;
+}
+
+#snakeOverlay{
+  position:fixed;
+  inset:0;
+  background:#ffe6ef;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  z-index:50;
+  color:#ff2f6d;
+}
+
+canvas{
+  background:white;
+  box-shadow:0 0 30px hotpink;
+}
+
+#score{
+  margin-top:15px;
+  font-size:22px;
+}
+
+#ceremony{
+  position:fixed;
+  inset:0;
+  background:#ffe6ef;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  font-size:40px;
+  z-index:100;
+  color:#ff2f6d;
+}
+
+.blink{
+  animation:blink 0.7s infinite alternate;
+}
+
+@keyframes blink{
+  from{opacity:1;}
+  to{opacity:0.3;}
+}
+</style>
+</head>
+
+<body>
+
+<h1 id="mainText">Jupííí, pucidela dala anooo 😻😻</h1>
+<div id="funText">tak a teď jsem jenom tvůj prdelko 😈😝</div>
+
+<div id="gif"></div>
+
+<div class="flyPhotos" id="flyPhotos">
+  <img src="photos/photo1.jpg">
+  <img src="photos/photo2.jpg">
+  <img src="photos/photo3.jpg">
+  <img src="photos/photo4.jpg">
+  <img src="photos/photo5.jpg">
+  <img src="photos/photo6.jpg">
+  <img src="photos/photo7.jpg">
+  <img src="photos/photo8.jpg">
+  <img src="photos/photo9.jpg">
+  <img src="photos/photo10.jpg">
+</div>
+
+<div id="snakeOverlay">
+  <canvas id="game" width="500" height="500"></canvas>
+  <div id="score">Body: 0 / 5</div>
+  <div>Restart: mezerník</div>
+</div>
+
+<div id="ceremony"></div>
+
+<audio id="romanticMusic" src="audio/celebrate.mp3"></audio>
+<audio id="snakeMusic" src="audio/snake_music.mp3" loop></audio>
+<audio id="eatSound" src="audio/eat.mp3"></audio>
+<audio id="fanfare" src="audio/fanfare.mp3"></audio>
+
+<script>
+const gifBox=document.getElementById("gif");
+const mainText=document.getElementById("mainText");
+const funText=document.getElementById("funText");
+const flyPhotos=document.getElementById("flyPhotos");
+const photoImgs=flyPhotos.querySelectorAll("img");
+
+const romanticMusic=document.getElementById("romanticMusic");
+const snakeMusic=document.getElementById("snakeMusic");
+const eatSound=document.getElementById("eatSound");
+const fanfare=document.getElementById("fanfare");
+
+const overlay=document.getElementById("snakeOverlay");
+const ceremony=document.getElementById("ceremony");
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+const scoreDisplay=document.getElementById("score");
+
+let snake,food,dx,dy,score,running;
+
+/* ✅ HUDBA HNED PO NAČTENÍ */
+window.addEventListener("load",()=>{
+  romanticMusic.currentTime=0;
+  romanticMusic.play();
+});
+
+function initSnake(){
+  snake=[{x:10,y:10}];
+  food={x:5,y:5};
+  dx=1;dy=0;
+  score=0;
+  running=true;
+  scoreDisplay.innerText="Body: 0 / 5";
+}
+
+function draw(){
+  if(!running)return;
+  setTimeout(()=>{
+    ctx.fillStyle="white";
+    ctx.fillRect(0,0,500,500);
+
+    ctx.fillStyle="hotpink";
+    snake.forEach(p=>ctx.fillRect(p.x*25,p.y*25,23,23));
+
+    ctx.fillStyle="#ff2f6d";
+    ctx.fillRect(food.x*25,food.y*25,23,23);
+
+    let head={x:snake[0].x+dx,y:snake[0].y+dy};
+
+    if(head.x===food.x && head.y===food.y){
+      score++;
+      eatSound.currentTime=0;
+      eatSound.play();
+      scoreDisplay.innerText="Body: "+score+" / 5";
+      food={x:Math.floor(Math.random()*20),y:Math.floor(Math.random()*20)};
+      if(score>=5){winGame();return;}
+    }else snake.pop();
+
+    if(head.x<0||head.y<0||head.x>=20||head.y>=20){
+      running=false;return;
+    }
+
+    snake.unshift(head);
+    draw();
+  },100);
+}
+
+document.addEventListener("keydown",e=>{
+  if(e.code==="ArrowUp"&&dy===0){dx=0;dy=-1;}
+  if(e.code==="ArrowDown"&&dy===0){dx=0;dy=1;}
+  if(e.code==="ArrowLeft"&&dx===0){dx=-1;dy=0;}
+  if(e.code==="ArrowRight"&&dx===0){dx=1;dy=0;}
+  if(e.code==="Space"&&!running){initSnake();draw();}
+});
+
+function startSnake(){
+  romanticMusic.pause();
+  overlay.style.display="flex";
+  snakeMusic.play();
+  initSnake();
+  draw();
+}
+
+function winGame(){
+  running=false;
+  snakeMusic.pause();
+  overlay.style.display="none";
+  ceremony.style.display="flex";
+  fanfare.play();
+
+  gifBox.style.display="none";
+  mainText.style.display="none";
+  funText.style.display="none";
+
+  ceremony.innerHTML="Výhru za nejlepší výkon ve Snakovi...";
+  setTimeout(()=>ceremony.innerHTML="vyhrááááváááá...",2000);
+  setTimeout(()=>ceremony.innerHTML='<span class="blink">LUCINKA SAMUELOVÁ</span>',4000);
+  setTimeout(()=>ceremony.innerHTML='<span class="blink">LUCINKA SAMUELOVÁ</span><br>GRATULUJEME!!!🥳',7000);
+
+  setTimeout(()=>{
+    ceremony.style.display="none";
+    gifBox.style.display="block";
+    mainText.style.display="block";
+
+    gifBox.innerHTML='<img src="gifs/applause.gif">';
+    mainText.innerText="Srdečně třesu Vaší pravicí slečno!";
+    romanticMusic.currentTime=0;
+    romanticMusic.play();
+
+    setTimeout(finalPhase,4000);
+  },10000);
+}
+
+function finalPhase(){
+
+  /* ✅ PEVNÝ TEXT NAHOŘE PŘI LÉTÁNÍ */
+  const topText=document.createElement("div");
+  topText.id="flyingText";
+  topText.innerText="Pussy eater joined the chat😝";
+  document.body.appendChild(topText);
+
+  gifBox.innerHTML='<img src="gifs/minions2.gif">';
+  funText.innerText="teď už jsem jenom tvůj 👀😈😝";
+  mainText.style.opacity=0;
+  funText.style.opacity=1;
+
+  for(let i=0;i<50;i++){
+    setTimeout(()=>{
+      const h=document.createElement("div");
+      h.className="heart";
+      h.textContent="❤";
+      h.style.left=Math.random()*100+"vw";
+      h.style.animationDuration=(6+Math.random()*4)+"s";
+      document.body.appendChild(h);
+    },i*120);
+  }
+
+  photoImgs.forEach(img=>img.style.display="block");
+
+  const photosData=[];
+  photoImgs.forEach(img=>{
+    const rect=img.getBoundingClientRect();
+    const x=Math.random()*(innerWidth-rect.width);
+    const y=Math.random()*(innerHeight-rect.height);
+    const dx=(Math.random()*2+1)*(Math.random()<0.5?-1:1);
+    const dy=(Math.random()*2+1)*(Math.random()<0.5?-1:1);
+    photosData.push({img,x,y,dx,dy,w:rect.width,h:rect.height,rot:0});
+  });
+
+  function move(){
+    photosData.forEach(p=>{
+      p.x+=p.dx;p.y+=p.dy;
+      if(p.x<=0||p.x+p.w>=innerWidth)p.dx*=-1;
+      if(p.y<=0||p.y+p.h>=innerHeight)p.dy*=-1;
+      p.rot+=0.2;
+      p.img.style.left=p.x+"px";
+      p.img.style.top=p.y+"px";
+      p.img.style.transform=`rotate(${p.rot}deg)`;
+    });
+    requestAnimationFrame(move);
+  }
+  move();
+}
+
+setTimeout(()=>{gifBox.innerHTML='<img src="gifs/minions1.gif">';},2000);
+setTimeout(startSnake,6000);
+</script>
+
+</body>
+</html>

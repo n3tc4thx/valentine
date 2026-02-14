@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Otázka pro Samuhelku💘</title>
+
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(135deg,#f7c6d9,#ffe6ef);
+  font-family: Arial, sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+  position:relative;
+}
+
+/* HUDBA BUTTON – NAD KARTOU */
+#musicBtn{
+  position:absolute;
+  top:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:14px 32px;           /* větší padding */
+  font-size:18px;              /* větší text */
+  min-width:260px;             /* aby se text pohodlně vešel */
+  border:none;
+  border-radius:35px;
+  background:#ff2f6d;          /* stejná barva jako ANO */
+  color:white;
+  cursor:pointer;
+  z-index:50;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  white-space:nowrap;          /* aby se text nelámal */
+}
+
+.karta {
+  background:white;
+  width:420px;
+  height:320px;
+  border-radius:25px;
+  text-align:center;
+  padding-top:40px;
+  position:relative;
+}
+
+/* SHAKE */
+@keyframes shake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-12px); }
+  40%  { transform: translateX(12px); }
+  60%  { transform: translateX(-8px); }
+  80%  { transform: translateX(8px); }
+  100% { transform: translateX(0); }
+}
+
+button {
+  width:120px;
+  height:46px;
+  font-size:18px;
+  border-radius:25px;
+  border:none;
+  cursor:pointer;
+  position:absolute;
+}
+
+#yes {
+  background:#ff2f6d;
+  color:white;
+  left:70px;
+  bottom:70px;
+}
+
+#no {
+  background:#ddd;
+  left:230px;
+  bottom:70px;
+}
+
+#hint {
+  position:absolute;
+  bottom:20px;
+  width:100%;
+  font-size:14px;
+  color:#777;
+}
+
+@media(max-width:600px){
+  .karta{width:90%;height:340px;}
+}
+</style>
+</head>
+
+<body>
+
+<button id="musicBtn">Klikni na mě 👀😈</button>
+
+<div class="karta" id="karta">
+
+  <h1 id="title">
+    Pipinko krásná a elegantní…<br>
+    budeš mou valentýnkou? 👀
+  </h1>
+
+  <button id="yes">Ano 😝</button>
+  <button id="no">Ne 🥴</button>
+
+  <p id="hint">Lucinka váhá 🙄</p>
+</div>
+
+<!-- AUDIO -->
+<audio id="love" src="audio/love.mp3" loop></audio>
+<audio id="elevator" src="audio/elevator.mp3" loop></audio>
+<audio id="sound1" src="audio/sound.mp3"></audio>
+<audio id="sound2" src="audio/sound2.mp3"></audio>
+
+<script>
+const karta = document.getElementById("karta");
+const noBtn = document.getElementById("no");
+const yesBtn = document.getElementById("yes");
+const hint = document.getElementById("hint");
+const title = document.getElementById("title");
+const musicBtn = document.getElementById("musicBtn");
+
+const love = document.getElementById("love");
+const elevator = document.getElementById("elevator");
+const sound1 = document.getElementById("sound1");
+const sound2 = document.getElementById("sound2");
+
+let musicStarted = false;
+
+/* HUDBA TLAČÍTKO */
+musicBtn.addEventListener("click", () => {
+  if(!musicStarted){
+    love.play().catch(()=>{});
+    musicStarted = true;
+
+    /* jemný fade */
+    musicBtn.style.opacity = "0";
+    musicBtn.style.transform = "translateX(-50%) scale(0.85)";
+    
+    setTimeout(()=>{
+      musicBtn.style.display = "none";
+    },600);
+  }
+});
+
+/* VIBRACE */
+function vibrate(){
+  if (navigator.vibrate) {
+    navigator.vibrate(80);
+  }
+}
+
+/* RANDOM ZVUK */
+function playRandomSound(){
+  const sounds = [sound1, sound2];
+  const s = sounds[Math.floor(Math.random()*sounds.length)];
+  s.pause();
+  s.currentTime = 0;
+  s.play().catch(()=>{});
+}
+
+/* SHAKE */
+function shakeCard(){
+  karta.style.animation = "none";
+  karta.offsetHeight;
+  karta.style.animation = "shake 0.45s";
+}
+
+/* KLIK NA NE */
+noBtn.addEventListener("click", e => {
+  e.preventDefault();
+  playRandomSound();
+  shakeCard();
+  vibrate();
+  hint.textContent = "zkus to znovu… 😈";
+});
+
+/* POHYB NE */
+function moveNo(){
+  elevator.play().catch(()=>{});
+  love.pause();
+  playRandomSound();
+  vibrate();
+
+  title.innerHTML = "Si děláš prdel ne Lucie? 👺";
+
+  const maxX = karta.clientWidth - noBtn.offsetWidth;
+  const maxY = karta.clientHeight - noBtn.offsetHeight;
+
+  noBtn.style.left = Math.random()*maxX + "px";
+  noBtn.style.top  = Math.random()*maxY + "px";
+
+  const texts=[
+    "co zkoušíš🤨",
+    "nech toho😠",
+    "přestaň😡",
+    "nechytíí☺️",
+    "LUCIE😡",
+    "co si myslíš🙄",
+    "nedělej👺",
+    "DON´T TOUCH IT",
+    "co třeba ano?🙄",
+    "nenene😌",
+    "máš smůlu🤭"
+  ];
+  hint.textContent = texts[Math.floor(Math.random()*texts.length)];
+}
+
+karta.addEventListener("mousemove",e=>{
+  const r=noBtn.getBoundingClientRect();
+  const d=Math.hypot(
+    e.clientX-(r.left+r.width/2),
+    e.clientY-(r.top+r.height/2)
+  );
+  if(d<120) moveNo();
+});
+
+karta.addEventListener("touchstart",moveNo);
+karta.addEventListener("touchmove",moveNo);
+
+/* ANO */
+yesBtn.addEventListener("click",()=>{
+  window.location.href="success.html";
+});
+</script>
+
+</body>
+</html>
